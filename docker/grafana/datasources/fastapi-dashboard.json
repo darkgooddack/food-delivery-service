@@ -1,0 +1,53 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "type": "dashboard"
+      }
+    ]
+  },
+  "panels": [
+    {
+      "title": "Requests per second",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "rate(http_server_requests_total[1m])",
+          "legendFormat": "{{method}} {{path}}",
+          "refId": "A"
+        }
+      ],
+      "id": 1
+    },
+    {
+      "title": "Request duration (avg)",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "rate(http_request_duration_seconds_sum[1m]) / rate(http_request_duration_seconds_count[1m])",
+          "legendFormat": "avg duration",
+          "refId": "A"
+        }
+      ],
+      "id": 2
+    },
+    {
+      "title": "Response codes",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "rate(http_response_status_total[1m])",
+          "legendFormat": "{{status_code}}",
+          "refId": "A"
+        }
+      ],
+      "id": 3
+    }
+  ],
+  "title": "FastAPI Metrics",
+  "timezone": "browser",
+  "schemaVersion": 27,
+  "version": 1,
+  "refresh": "5s"
+}

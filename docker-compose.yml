@@ -1,0 +1,118 @@
+services:
+  redis:
+    image: redis:latest
+    container_name: redis-container
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 5s
+
+  db:
+    image: postgres:13
+    container_name: postgres-container
+    environment:
+      POSTGRES_USER: ${DB__USER}
+      POSTGRES_PASSWORD: ${DB__PASSWORD}
+      POSTGRES_DB: ${DB__NAME}
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${DB__USER}", "-d", "${DB__NAME}"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 5s
+
+  app:
+    build: .
+    container_name: fastapi-app
+    depends_on:
+      - db
+      - redis
+    ports:
+      - "8000:8000"
+    environment:
+      - DB__HOST=${DB__HOST}
+      - DB__PORT=${DB__PORT}
+      - DB__NAME=${DB__NAME}
+      - DB__USER=${DB__USER}
+      - DB__PASSWORD=${DB__PASSWORD}
+
+      - JWT__SECRET_KEY=${JWT__SECRET_KEY}
+      - JWT__ALGORITHM=${JWT__ALGORITHM}
+      - JWT__ACCESS_EXPIRE_MIN=${JWT__ACCESS_EXPIRE_MIN}
+      - JWT__REFRESH_EXPIRE_DAYS=${JWT__REFRESH_EXPIRE_DAYS}
+
+      - API_PREFIX=${API__PREFIX}
+
+      - REDIS__HOST=${REDIS__HOST}
+      - REDIS__PORT=${REDIS__PORT}
+      - REDIS__DB=${REDIS__DB}
+
+      - STRIPE__SECRET_KEY=${STRIPE__SECRET_KEY}
+      - STRIPE__PUBLIC_KEY=${STRIPE__PUBLIC_KEY}
+
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8000/health"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 5s
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - app-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    volumes:
+      - grafana-storage:/var/lib/grafana
+      - ./docker/grafana/datasources:/etc/grafana/provisioning/datasources
+      - ./docker/grafana/dashboards:/etc/grafana/provisioning/dashboards
+    networks:
+      - app-network
+
+  nginx:
+    container_name: nginx
+    build:
+      context: ./docker/nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - app
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+  db-data:
+  grafana-storage:
