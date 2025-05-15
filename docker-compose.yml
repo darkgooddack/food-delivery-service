@@ -43,26 +43,8 @@ services:
       - redis
     ports:
       - "8000:8000"
-    environment:
-      - DB__HOST=${DB__HOST}
-      - DB__PORT=${DB__PORT}
-      - DB__NAME=${DB__NAME}
-      - DB__USER=${DB__USER}
-      - DB__PASSWORD=${DB__PASSWORD}
-
-      - JWT__SECRET_KEY=${JWT__SECRET_KEY}
-      - JWT__ALGORITHM=${JWT__ALGORITHM}
-      - JWT__ACCESS_EXPIRE_MIN=${JWT__ACCESS_EXPIRE_MIN}
-      - JWT__REFRESH_EXPIRE_DAYS=${JWT__REFRESH_EXPIRE_DAYS}
-
-      - API_PREFIX=${API__PREFIX}
-
-      - REDIS__HOST=${REDIS__HOST}
-      - REDIS__PORT=${REDIS__PORT}
-      - REDIS__DB=${REDIS__DB}
-
-      - STRIPE__SECRET_KEY=${STRIPE__SECRET_KEY}
-      - STRIPE__PUBLIC_KEY=${STRIPE__PUBLIC_KEY}
+    env_file:
+      - .env.example
 
     networks:
       - app-network
