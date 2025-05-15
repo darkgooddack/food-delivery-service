@@ -12,7 +12,7 @@ Instrumentator().instrument(app).expose(app)
 for router in routers:
     app.include_router(router, prefix=settings.api.prefix)
 
-@app.get("/")
+@app.get("/", include_in_schema=False)
 async def redirect_to_docs():
     return RedirectResponse(url="/docs")
 
